@@ -7,108 +7,36 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <!-- AD SPACE: Top Banner -->
     <div class="ad-container ad-top">
         <div id="ad-top-banner" class="ad-placeholder">
-            <!-- Google AdSense or other ad network code goes here -->
             <span class="ad-label">Advertisement</span>
         </div>
     </div>
 
-    <!-- Login/Auth Modal -->
-    <div id="authModal" class="auth-modal">
-        <div class="auth-glass-container">
-            <div class="auth-content">
-                <h1 class="auth-title">Photo Mosaic Generator</h1>
-                <p class="auth-subtitle">Create stunning photo mosaics in minutes</p>
-
-                <!-- Login Form -->
-                <div id="loginForm" class="auth-form-section active">
-                    <form class="auth-form">
-                        <div class="form-group">
-                            <label for="loginEmail">Email Address</label>
-                            <input type="email" id="loginEmail" placeholder="your@email.com" required>
-                            <div class="input-focus-line"></div>
-                        </div>
-                        <div class="form-group">
-                            <label for="loginPassword">Password</label>
-                            <input type="password" id="loginPassword" placeholder="••••••••" required>
-                            <div class="input-focus-line"></div>
-                        </div>
-                        <button type="button" class="btn btn-primary btn-full" onclick="handleLogin()">
-                            <span>Login</span>
-                            <span class="btn-icon">→</span>
-                        </button>
-                    </form>
-                    <p class="auth-toggle">Don't have an account? <a href="#" onclick="toggleAuthForm()">Sign Up</a></p>
-                </div>
-
-                <!-- Signup Form -->
-                <div id="signupForm" class="auth-form-section">
-                    <form class="auth-form">
-                        <div class="form-group">
-                            <label for="signupName">Full Name</label>
-                            <input type="text" id="signupName" placeholder="John Doe" required>
-                            <div class="input-focus-line"></div>
-                        </div>
-                        <div class="form-group">
-                            <label for="signupEmail">Email Address</label>
-                            <input type="email" id="signupEmail" placeholder="your@email.com" required>
-                            <div class="input-focus-line"></div>
-                        </div>
-                        <div class="form-group">
-                            <label for="signupPassword">Password</label>
-                            <input type="password" id="signupPassword" placeholder="••••••••" required>
-                            <div class="input-focus-line"></div>
-                        </div>
-                        <button type="button" class="btn btn-primary btn-full" onclick="handleSignup()">
-                            <span>Create Account</span>
-                            <span class="btn-icon">→</span>
-                        </button>
-                    </form>
-                    <p class="auth-toggle">Already have an account? <a href="#" onclick="toggleAuthForm()">Login</a></p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Main Dashboard -->
-    <div id="mainDashboard" class="dashboard-container hidden">
+    <div id="mainDashboard" class="dashboard-container">
         <div class="dashboard-wrapper">
-            <!-- Left Sidebar: AD SPACE -->
             <aside class="sidebar-left">
                 <div id="ad-sidebar-left" class="ad-placeholder">
-                    <!-- Google AdSense or other ad network code goes here -->
                     <span class="ad-label">Advertisement</span>
                 </div>
             </aside>
 
-            <!-- Main Content Area -->
             <main class="main-content">
-                <!-- Header -->
                 <header class="dashboard-header">
                     <div class="header-content">
                         <h1 class="dashboard-title">Photo Mosaic Studio</h1>
                         <p class="dashboard-subtitle">Transform your photos into stunning mosaics</p>
                     </div>
-                    <div class="header-actions">
-                        <button class="btn btn-secondary" onclick="handleLogout()">
-                            <span>Logout</span>
-                        </button>
-                    </div>
                 </header>
 
-                <!-- Workspace Tabs -->
                 <div class="workspace-tabs">
                     <button class="tab-btn active" onclick="switchTab('upload')">Upload & Configure</button>
                     <button class="tab-btn" onclick="switchTab('preview')">Preview & Generate</button>
                     <button class="tab-btn" onclick="switchTab('results')">Results</button>
                 </div>
 
-                <!-- Tab 1: Upload & Configure -->
                 <div id="uploadTab" class="tab-content active">
                     <div class="workspace-grid">
-                        <!-- Target Image Upload -->
                         <div class="glass-card workspace-card">
                             <div class="card-header">
                                 <h2>Target Image</h2>
@@ -132,7 +60,6 @@
                             </div>
                         </div>
 
-                        <!-- Tile Images Upload -->
                         <div class="glass-card workspace-card">
                             <div class="card-header">
                                 <h2>Tile Images</h2>
@@ -160,7 +87,6 @@
                         </div>
                     </div>
 
-                    <!-- Configuration Options -->
                     <div class="glass-card config-card">
                         <div class="card-header">
                             <h3>Mosaic Settings</h3>
@@ -194,7 +120,6 @@
                         </div>
                     </div>
 
-                    <!-- Action Buttons -->
                     <div class="action-buttons">
                         <button class="btn btn-primary btn-lg" onclick="goToPreview()" id="nextBtn">
                             Continue to Preview
@@ -203,8 +128,7 @@
                     </div>
                 </div>
 
-                <!-- Tab 2: Preview & Generate -->
-                <div id="previewTab" class="tab-content">
+                <div id="previewTab" class="tab-content hidden">
                     <div class="preview-container">
                         <div class="glass-card preview-card">
                             <div class="card-header">
@@ -237,9 +161,8 @@
                         </div>
                     </div>
 
-                    <!-- Action Buttons -->
                     <div class="action-buttons">
-                        <button class="btn btn-secondary" onclick="goToUpload()">← Back</button>
+                        <button class="btn btn-secondary" onclick="switchTab('upload')">← Back</button>
                         <button class="btn btn-primary btn-lg" id="generateBtn" onclick="generateMosaic()">
                             Generate Mosaic
                             <span class="btn-icon">✨</span>
@@ -247,9 +170,7 @@
                     </div>
                 </div>
 
-                <!-- Tab 3: Results -->
-                <div id="resultsTab" class="tab-content">
-                    <!-- Processing State -->
+                <div id="resultsTab" class="tab-content hidden">
                     <div id="processingState" class="processing-state">
                         <div class="glass-card processing-card">
                             <div class="processing-header">
@@ -266,10 +187,8 @@
                         </div>
                     </div>
 
-                    <!-- Results State -->
                     <div id="resultsState" class="results-state hidden">
                         <div class="results-container">
-                            <!-- Low Resolution Result -->
                             <div class="glass-card result-card">
                                 <div class="result-header">
                                     <h3>Low Resolution</h3>
@@ -287,7 +206,6 @@
                                 </button>
                             </div>
 
-                            <!-- Standard Resolution Result -->
                             <div class="glass-card result-card">
                                 <div class="result-header">
                                     <h3>Standard Resolution</h3>
@@ -305,7 +223,6 @@
                                 </button>
                             </div>
 
-                            <!-- 4K Premium Result -->
                             <div class="glass-card result-card premium-locked">
                                 <div class="result-header">
                                     <h3>Ultra High Definition</h3>
@@ -336,7 +253,6 @@
                             </div>
                         </div>
 
-                        <!-- Generate New Button -->
                         <div class="action-buttons">
                             <button class="btn btn-secondary" onclick="resetToUpload()">← Start New Mosaic</button>
                         </div>
@@ -344,17 +260,14 @@
                 </div>
             </main>
 
-            <!-- Right Sidebar: AD SPACE -->
             <aside class="sidebar-right">
                 <div id="ad-sidebar-right" class="ad-placeholder">
-                    <!-- Google AdSense or other ad network code goes here -->
                     <span class="ad-label">Advertisement</span>
                 </div>
             </aside>
         </div>
     </div>
 
-    <!-- Upgrade Modal -->
     <div id="upgradeModal" class="modal hidden">
         <div class="modal-overlay" onclick="closeUpgradeModal()"></div>
         <div class="glass-card modal-content">
@@ -412,7 +325,6 @@
         </div>
     </div>
 
-    <!-- Toast Notification -->
     <div id="toast" class="toast hidden">
         <div class="toast-content">
             <span id="toastMessage"></span>
