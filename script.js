@@ -1,101 +1,45 @@
-async function finalizeProcessing() {
-    // Generate ACTUAL mosaic images using the user's uploaded photos
-    const standardRes = await createSmartMosaic(800, 800);   // Standard Web Size
-    const highRes = await createSmartMosaic(1600, 1600);     // HD Print Size
-    const ultraHD = await createSmartMosaic(3200, 3200);     // 4K Ultra Size
-
-    const res240 = document.getElementById('result240p');
-    const res480 = document.getElementById('result480p');
-    const res4k = document.getElementById('result4k');
-
-    if (res240) res240.src = standardRes;
-    if (res480) res480.src = highRes;
-    if (res4k) res4k.src = ultraHD;
-
-    // Hide processing, show results
-    const procState = document.getElementById('processingState');
-    const resState = document.getElementById('resultsState');
+// Wait for the HTML to fully load before running ANY script
+document.addEventListener('DOMContentLoaded', () => {
     
-    if (procState) procState.classList.add('hidden');
-    if (resState) resState.classList.remove('hidden');
+    // 1. Safely grab all our elements
+    const tabButtons = document.querySelectorAll('.tab-btn');
+    const tabContents = document.querySelectorAll('.tab-content');
+    const generateBtn = document.getElementById('generate-btn');
+    const previewCanvas = document.getElementById('preview-canvas');
     
-    showToast('Mosaic generated successfully!', 'success');
-}
+    // Setup Canvas Context (needed for drawing the image later)
+    const ctx = previewCanvas ? previewCanvas.getContext('2d') : null;
 
-// This replaces the old "Mock" purple generator with a real image blender
-function createSmartMosaic(width, height) {
-    return new Promise((resolve) => {
-        const canvas = document.createElement('canvas');
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
+    // 2. Tab Switching Logic
+    tabButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            // Get the target tab ID from the clicked button
+            const targetId = button.getAttribute('data-target');
 
-        // 1. Draw the main Target Image as the base
-        const targetImg = new Image();
-        targetImg.onload = () => {
-            ctx.drawImage(targetImg, 0, 0, width, height);
+            // Remove 'active' class from all buttons
+            tabButtons.forEach(btn => btn.classList.remove('active'));
+            // Hide all tab content
+            tabContents.forEach(content => content.classList.add('hidden'));
 
-            if (appState.tileImages.length === 0) {
-                resolve(canvas.toDataURL('image/png'));
-                return;
+            // Add 'active' to the clicked button
+            button.classList.add('active');
+            // Show the target content area safely
+            const targetContent = document.getElementById(targetId);
+            if (targetContent) {
+                targetContent.classList.remove('hidden');
+            } else {
+                console.error(`Could not find tab content with ID: ${targetId}`);
             }
-
-            // 2. Figure out how many tiles to use based on settings
-            let cols = 20; 
-            if (appState.mosaicSettings.tileSize === 'small') cols = 40;
-            if (appState.mosaicSettings.tileSize === 'large') cols = 10;
-            
-            const tileW = width / cols;
-            const tileH = height / cols;
-
-            // 3. Pre-load all the little tile images
-            let tilesLoaded = 0;
-            const tileImgElements = [];
-            
-            appState.tileImages.forEach(tileData => {
-                const img = new Image();
-                img.onload = () => {
-                    tilesLoaded++;
-                    // Once all tiles are loaded, draw them onto the canvas
-                    if (tilesLoaded === appState.tileImages.length) {
-                        drawTilesAndFinish();
-                    }
-                };
-                img.src = tileData.data;
-                tileImgElements.push(img);
-            });
-
-            function drawTilesAndFinish() {
-                // Apply blend mode from your settings
-                const blend = appState.mosaicSettings.blendMode;
-                if (blend === 'overlay' || blend === 'multiply') {
-                     ctx.globalCompositeOperation = blend;
-                } else {
-                     ctx.globalAlpha = 0.6; // Standard transparency
-                }
-
-                // Draw the little tiles in a grid
-                let tileIndex = 0;
-                for (let y = 0; y < height; y += tileH) {
-                    for (let x = 0; x < width; x += tileW) {
-                        const tile = tileImgElements[tileIndex % tileImgElements.length];
-                        ctx.drawImage(tile, x, y, tileW, tileH);
-                        tileIndex++;
-                    }
-                }
-
-                // Reset canvas settings
-                ctx.globalAlpha = 1.0;
-                ctx.globalCompositeOperation = 'source-over';
-
-                // Lightly draw the target image over the top one more time to restore crisp details
-                ctx.globalAlpha = 0.4;
-                ctx.drawImage(targetImg, 0, 0, width, height);
-                
-                // Convert the final canvas to a downloadable image
-                resolve(canvas.toDataURL('image/png', 1.0)); 
-            }
-        };
-        targetImg.src = appState.targetImage.data;
+        });
     });
-}
+
+    // 3. Generate Button Logic Placeholder
+    if (generateBtn) {
+        generateBtn.addEventListener('click', () => {
+            console.log("Generate button clicked! Starting mosaic processing...");
+            // We will add the actual image processing logic here next
+        });
+    } else {
+         console.warn("Generate button not found in the DOM.");
+    }
+});
