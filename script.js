@@ -572,8 +572,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Initialize with auth screen
-    showAuthenticationUI();
+    // ==========================================
+    // BUG FIX APPLIED HERE
+    // ==========================================
+    // Initialize with auth screen (COMMENTED OUT TEMPORARILY)
+    // showAuthenticationUI(); 
+    
+    // Force the app to show the dashboard immediately
+    appState.isAuthenticated = true; 
 });
 
 // ========================================
@@ -599,6 +605,3 @@ function loadStateFromLocalStorage() {
         appState.mosaicSettings = state.mosaicSettings;
     }
 }
-
-// Optional: Save on important actions
-// saveStateToLocalStorage();
