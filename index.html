@@ -626,9 +626,9 @@
 
                     <div class="detail-control">
                         <label class="detail-label">Detail Level: <span id="detailValue">4</span></label>
-                        <input type="range" id="detailSlider" min="1" max="6" value="4">
+                        <input type="range" id="detailSlider" min="1" max="8" value="4">
                         <div style="font-size: 0.8rem; color: var(--color-text-secondary); margin-top: 8px;">
-                            <span id="tileInfo">Tile Size: ~10px</span>
+                            <span id="tileInfo">High Detail (Recommended) • Tile: ~8px</span>
                         </div>
                     </div>
 
@@ -693,11 +693,11 @@
         let tileImages = [];
         let mosaicGenerated = false;
         let isGenerating = false;
-        let tileColorCache = {}; // Cache tile colors
+        let tileColorCache = {}; 
 
-        const detailLevels = { 1: 18, 2: 14, 3: 10, 4: 8, 5: 6, 6: 4 }; // Smaller tiles = more detail
+        // UPDATED: Added levels 7 (2px) and 8 (1px)
+        const detailLevels = { 1: 18, 2: 14, 3: 10, 4: 8, 5: 6, 6: 4, 7: 2, 8: 1 }; 
 
-        // RGB to Lab color space conversion (perceptually accurate)
         function rgbToLab(r, g, b) {
             r = r / 255;
             g = g / 255;
@@ -727,7 +727,6 @@
             return { L, a, b: lab_b };
         }
 
-        // Calculate color distance in Lab space (perceptually accurate)
         function labDistance(lab1, lab2) {
             const dL = lab1.L - lab2.L;
             const da = lab1.a - lab2.a;
@@ -735,12 +734,10 @@
             return Math.sqrt(dL * dL + da * da + db * db);
         }
 
-        // Get brightness
         function getBrightness(r, g, b) {
             return 0.299 * r + 0.587 * g + 0.114 * b;
         }
 
-        // Get saturation
         function getSaturation(r, g, b) {
             const max = Math.max(r, g, b);
             const min = Math.min(r, g, b);
@@ -748,7 +745,6 @@
             return (max - min) / max;
         }
 
-        // Enhance image vibrance and saturation
         function enhanceVibrance(canvas, amount = 0.4) {
             const ctx = canvas.getContext('2d');
             const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
@@ -766,7 +762,6 @@
                 if (max !== min) {
                     let s = l > 0.5 ? (max - min) / (510 - max - min) : (max - min) / (max + min);
                     
-                    // Increase saturation
                     s = Math.min(1, s * (1 + amount));
 
                     const c = (1 - Math.abs(2 * l - 1)) * s;
@@ -801,12 +796,24 @@
         document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('targetInput').addEventListener('change', handleTargetUpload);
             document.getElementById('tilesInput').addEventListener('change', handleTilesUpload);
+            
+            // UPDATED: Added text descriptions for new levels
             document.getElementById('detailSlider').addEventListener('change', (e) => {
                 const val = e.target.value;
                 document.getElementById('detailValue').textContent = val;
-                const sizes = { 1: 'Very Low Detail (Coarse)', 2: 'Low Detail', 3: 'Medium Detail', 4: 'High Detail (Recommended)', 5: 'Very High Detail', 6: 'Maximum Detail' };
+                const sizes = { 
+                    1: 'Very Low Detail (Coarse)', 
+                    2: 'Low Detail', 
+                    3: 'Medium Detail', 
+                    4: 'High Detail (Recommended)', 
+                    5: 'Very High Detail', 
+                    6: 'Maximum Detail', 
+                    7: 'Extreme Detail', 
+                    8: 'Insane Detail (Slow!)' 
+                };
                 document.getElementById('tileInfo').textContent = `${sizes[val]} • Tile: ~${detailLevels[val]}px`;
             });
+            
             document.getElementById('supportModal').addEventListener('click', (e) => {
                 if (e.target.id === 'supportModal') closeModal();
             });
@@ -841,7 +848,7 @@
                 return;
             }
             tileImages = [];
-            tileColorCache = {}; // Clear cache for new tiles
+            tileColorCache = {}; 
             let loaded = 0;
             const validFiles = Array.from(files).filter(f => f.type.startsWith('image/'));
             if (validFiles.length === 0) {
@@ -915,7 +922,6 @@
             document.getElementById('generateBtn').disabled = true;
             showStatus('🔄 Starting generation...');
 
-            // Run async generation
             generateMosaicAsync();
         }
 
@@ -927,7 +933,6 @@
                 await new Promise(r => setTimeout(r, 10));
                 
                 showStatus('🔍 Analyzing tile colors in Lab space...');
-                // Pre-cache all tile colors with Lab values
                 tileColorCache = {};
                 for (let i = 0; i < tileImages.length; i++) {
                     const tile = tileImages[i];
@@ -978,7 +983,6 @@
                         const w = Math.min(tileSize, canvas.width - x);
                         const h = Math.min(tileSize, canvas.height - y);
 
-                        // Calculate average color with more samples
                         let r = 0, g = 0, b = 0;
                         let brightness = 0;
                         let saturation = 0;
@@ -1001,20 +1005,17 @@
                         brightness = Math.round(brightness / cnt);
                         saturation = saturation / cnt;
 
-                        // Convert to Lab for accurate color matching
                         const targetLab = rgbToLab(r, g, b);
 
-                        // Find best tile using multi-criteria matching
                         let bestTile = 0;
                         let bestScore = Infinity;
 
                         for (let i = 0; i < tileImages.length; i++) {
                             const cached = tileColorCache[i];
                             
-                            // Multi-criteria scoring
-                            const colorDist = labDistance(targetLab, cached.lab); // Color (70%)
-                            const brightnessDiff = Math.abs(brightness - cached.brightness) / 255; // Brightness (20%)
-                            const saturationDiff = Math.abs(saturation - cached.saturation); // Saturation (10%)
+                            const colorDist = labDistance(targetLab, cached.lab); 
+                            const brightnessDiff = Math.abs(brightness - cached.brightness) / 255; 
+                            const saturationDiff = Math.abs(saturation - cached.saturation); 
                             
                             const score = colorDist * 0.7 + brightnessDiff * 50 * 0.2 + saturationDiff * 10 * 0.1;
                             
@@ -1024,11 +1025,9 @@
                             }
                         }
 
-                        // Draw tile
                         ctx.drawImage(tileImages[bestTile].img, x, y, w, h);
                         processed++;
 
-                        // Update progress
                         if (processed % batchSize === 0) {
                             const percent = Math.round((processed / totalTiles) * 100);
                             showStatus(`🎨 Processing ${percent}%...`);
@@ -1037,10 +1036,9 @@
                     }
                 }
 
-                // Enhance colors for better vibrancy
                 showStatus('✨ Enhancing colors...');
                 await new Promise(r => setTimeout(r, 10));
-                enhanceVibrance(canvas, 0.5); // Boost colors
+                enhanceVibrance(canvas, 0.5); 
 
                 document.getElementById('canvasPlaceholder').style.display = 'none';
                 document.getElementById('mosaicCanvas').style.display = 'block';
