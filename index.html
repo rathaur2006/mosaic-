@@ -1,22 +1,952 @@
-<div class="tab-container">
-    <button class="tab-btn active" data-target="upload-tab">Upload & Configure</button>
-    <button class="tab-btn" data-target="preview-tab">Preview & Generate</button>
-    <button class="tab-btn" data-target="results-tab">Results</button>
-</div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Photo Mosaic Studio</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-<div id="upload-tab" class="tab-content active">
-    <h2>Step 1: Upload Your Images</h2>
-    <input type="file" id="main-image-upload" accept="image/*">
+        :root {
+            --color-bg-primary: #0f0618;
+            --color-bg-secondary: #1a0b2e;
+            --color-purple-light: #7c3aed;
+            --color-accent: #ec4899;
+            --color-white: #ffffff;
+            --color-text-primary: #f0e6ff;
+            --color-text-secondary: #c9b0e8;
+            --glass-bg: rgba(255, 255, 255, 0.08);
+            --glass-border: rgba(255, 255, 255, 0.15);
+            --shadow-soft: 0 8px 32px rgba(0, 0, 0, 0.3);
+            --transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #0f0618 0%, #1a0b2e 25%, #4b1d52 75%, #1a0b2e 100%);
+            background-attachment: fixed;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--color-text-primary);
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(124, 58, 237, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(236, 72, 153, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+            z-index: 2;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 60px;
+            animation: slideDown 0.8s ease-out;
+        }
+
+        .header-content {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 40px 30px;
+            box-shadow: var(--shadow-soft);
+        }
+
+        h1 {
+            font-size: clamp(2rem, 8vw, 3.5rem);
+            font-weight: 700;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #ec4899, #7c3aed, #06b6d4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: var(--color-text-secondary);
+            font-weight: 300;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .ad-container-top {
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 40px;
+            box-shadow: var(--shadow-soft);
+            min-height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--color-text-secondary);
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 280px;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        @media (max-width: 1024px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+            .ad-container-sidebar {
+                display: none !important;
+            }
+        }
+
+        .upload-section {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: var(--shadow-soft);
+            animation: fadeInUp 0.8s ease-out 0.2s both;
+        }
+
+        .upload-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 30px;
+            color: var(--color-white);
+        }
+
+        .upload-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .upload-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .upload-box {
+            border: 2px dashed var(--glass-border);
+            border-radius: 16px;
+            padding: 35px 20px;
+            text-align: center;
+            cursor: pointer;
+            background: rgba(255, 255, 255, 0.04);
+            transition: var(--transition);
+        }
+
+        .upload-box:hover {
+            border-color: var(--color-purple-light);
+            background: rgba(124, 58, 237, 0.08);
+            box-shadow: 0 0 30px rgba(124, 58, 237, 0.2);
+        }
+
+        .upload-box input[type="file"] {
+            display: none;
+        }
+
+        .upload-label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+        }
+
+        .upload-icon {
+            font-size: 2.5rem;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .upload-text {
+            font-weight: 600;
+            color: var(--color-white);
+            font-size: 1rem;
+        }
+
+        .upload-subtext {
+            font-size: 0.85rem;
+            color: var(--color-text-secondary);
+        }
+
+        .preview-section {
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .preview-section.show {
+            display: block;
+        }
+
+        .preview-label {
+            font-weight: 600;
+            color: var(--color-white);
+            margin-bottom: 12px;
+            display: block;
+            font-size: 0.95rem;
+        }
+
+        .preview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+            gap: 10px;
+        }
+
+        .preview-item {
+            position: relative;
+            border-radius: 10px;
+            overflow: hidden;
+            aspect-ratio: 1;
+            background: var(--color-text-secondary);
+            border: 1px solid var(--glass-border);
+            animation: scaleIn 0.3s ease-out;
+        }
+
+        .preview-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .preview-remove {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            width: 24px;
+            height: 24px;
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            opacity: 0;
+            transition: var(--transition);
+        }
+
+        .preview-item:hover .preview-remove {
+            opacity: 1;
+        }
+
+        .preview-remove:hover {
+            background: rgba(236, 72, 153, 0.8);
+        }
+
+        .detail-control {
+            margin-bottom: 25px;
+        }
+
+        .detail-label {
+            font-weight: 600;
+            color: var(--color-white);
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.1);
+            -webkit-appearance: none;
+            cursor: pointer;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #7c3aed, #ec4899);
+            cursor: pointer;
+            box-shadow: 0 0 15px rgba(124, 58, 237, 0.5);
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #7c3aed, #ec4899);
+            cursor: pointer;
+            box-shadow: 0 0 15px rgba(124, 58, 237, 0.5);
+            border: none;
+        }
+
+        .canvas-section {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: var(--shadow-soft);
+            animation: fadeInUp 0.8s ease-out 0.4s both;
+        }
+
+        .canvas-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 25px;
+            color: var(--color-white);
+        }
+
+        .canvas-wrapper {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 16px;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 400px;
+            margin-bottom: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            overflow: auto;
+        }
+
+        #mosaicCanvas {
+            max-width: 100%;
+            height: auto;
+            border-radius: 12px;
+            box-shadow: 0 0 40px rgba(124, 58, 237, 0.3);
+            display: none;
+        }
+
+        .canvas-placeholder {
+            color: var(--color-text-secondary);
+            text-align: center;
+        }
+
+        .button-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .button-group {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        button {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-generate {
+            background: linear-gradient(135deg, #7c3aed, #ec4899);
+            color: white;
+            box-shadow: 0 0 30px rgba(124, 58, 237, 0.4);
+        }
+
+        .btn-generate:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 0 50px rgba(124, 58, 237, 0.6);
+        }
+
+        .btn-generate:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-download {
+            background: var(--glass-bg);
+            color: var(--color-white);
+            border: 2px solid var(--color-purple-light);
+            box-shadow: var(--shadow-soft);
+        }
+
+        .btn-download:hover:not(:disabled) {
+            background: rgba(124, 58, 237, 0.2);
+            box-shadow: 0 0 40px rgba(124, 58, 237, 0.4);
+            transform: translateY(-3px);
+        }
+
+        .btn-download:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .ad-container-sidebar {
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 30px 20px;
+            text-align: center;
+            box-shadow: var(--shadow-soft);
+            min-height: 600px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--color-text-secondary);
+            animation: fadeInUp 0.8s ease-out 0.3s both;
+        }
+
+        footer {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--color-text-secondary);
+            font-size: 0.95rem;
+            margin-top: 60px;
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: var(--glass-bg);
+            backdrop-filter: blur(30px);
+            border: 1px solid var(--glass-border);
+            border-radius: 25px;
+            padding: 50px;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+            position: relative;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: var(--color-white);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.5rem;
+            transition: var(--transition);
+        }
+
+        .modal-close:hover {
+            background: rgba(236, 72, 153, 0.3);
+            transform: rotate(90deg);
+        }
+
+        .modal-icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: var(--color-white);
+        }
+
+        .modal-text {
+            color: var(--color-text-secondary);
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .upi-handle {
+            background: linear-gradient(135deg, rgba(124, 58, 237, 0.2), rgba(236, 72, 153, 0.2));
+            border: 1px solid rgba(124, 58, 237, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--color-white);
+            letter-spacing: 0.5px;
+            transition: var(--transition);
+            cursor: pointer;
+            display: inline-block;
+            text-decoration: none;
+        }
+
+        .upi-handle:hover {
+            background: linear-gradient(135deg, rgba(124, 58, 237, 0.3), rgba(236, 72, 153, 0.3));
+            box-shadow: 0 0 30px rgba(124, 58, 237, 0.2);
+        }
+
+        .btn-close {
+            background: linear-gradient(135deg, #7c3aed, #ec4899);
+            color: white;
+            padding: 12px 30px;
+            font-size: 0.95rem;
+            margin-top: 20px;
+            box-shadow: 0 0 20px rgba(124, 58, 237, 0.3);
+        }
+
+        .btn-close:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 40px rgba(124, 58, 237, 0.5);
+        }
+
+        .status-message {
+            background: rgba(124, 58, 237, 0.2);
+            border-left: 4px solid var(--color-purple-light);
+            color: var(--color-white);
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .status-message.show {
+            display: block;
+        }
+
+        .status-message.error {
+            background: rgba(236, 72, 153, 0.2);
+            border-left-color: #ec4899;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        @keyframes scaleIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <h1>Photo Mosaic Studio</h1>
+            <p class="subtitle">Transform Your Photos Into Stunning Mosaics</p>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="ad-container-top">📌 ADVERTISEMENT (728x90 or responsive banner)</div>
+
+        <div class="main-grid">
+            <div>
+                <div class="upload-section">
+                    <div class="upload-title">📤 Upload Your Photos</div>
+                    
+                    <div class="upload-grid">
+                        <div class="upload-box">
+                            <label class="upload-label">
+                                <div class="upload-icon">🎯</div>
+                                <div class="upload-text">Main Target Photo</div>
+                                <div class="upload-subtext">JPG, PNG (1 file)</div>
+                                <input type="file" id="targetInput" accept="image/*">
+                            </label>
+                        </div>
+
+                        <div class="upload-box">
+                            <label class="upload-label">
+                                <div class="upload-icon">🖼️</div>
+                                <div class="upload-text">Tile Photos</div>
+                                <div class="upload-subtext">Up to 50 photos</div>
+                                <input type="file" id="tilesInput" accept="image/*" multiple>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="preview-section" id="targetPreviewSection">
+                        <label class="preview-label">Target Photo:</label>
+                        <div style="width: 100px; height: 100px; position: relative;">
+                            <div class="preview-item">
+                                <img id="targetImg" alt="Target">
+                                <button class="preview-remove" onclick="removeTarget()">&times;</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="preview-section" id="tilesPreviewSection">
+                        <label class="preview-label">Tile Photos (<span id="tileCount">0</span>/50):</label>
+                        <div class="preview-grid" id="tilesPreview"></div>
+                    </div>
+
+                    <div class="detail-control">
+                        <label class="detail-label">Detail Level: <span id="detailValue">4</span></label>
+                        <input type="range" id="detailSlider" min="1" max="6" value="4">
+                        <div style="font-size: 0.8rem; color: var(--color-text-secondary); margin-top: 8px;">
+                            <span id="tileInfo">Tile Size: ~10px</span>
+                        </div>
+                    </div>
+
+                    <div class="status-message" id="statusMessage"></div>
+                </div>
+
+                <div class="canvas-section">
+                    <div class="canvas-title">🎨 Mosaic Preview</div>
+                    <div class="canvas-wrapper">
+                        <canvas id="mosaicCanvas"></canvas>
+                        <div class="canvas-placeholder" id="canvasPlaceholder">
+                            Upload photos to generate mosaic preview
+                        </div>
+                    </div>
+
+                    <div class="button-group">
+                        <button class="btn-generate" id="generateBtn" onclick="generateMosaic()">
+                            Generate Mosaic
+                        </button>
+                        <button class="btn-download" id="downloadBtn" onclick="downloadMosaic4K()" disabled>
+                            Download 4K Mosaic
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="ad-container-sidebar">📢 ADVERTISEMENT<br>(300x600 responsive sidebar)</div>
+        </div>
+
+        <footer>Made by Yuvraj</footer>
     </div>
 
-<div id="preview-tab" class="tab-content hidden">
-    <h2>Step 2: Preview Your Mosaic</h2>
-    <canvas id="preview-canvas" width="600" height="400" style="border: 1px solid #ccc;"></canvas>
-    <br>
-    <button id="generate-btn">Generate Mosaic</button>
-</div>
+    <div class="modal-overlay" id="supportModal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal()">&times;</button>
+            <div class="modal-icon">🎉</div>
+            <div class="modal-title">Thank You!</div>
+            <div class="modal-text">
+                Thank you for using Photo Mosaic Studio! If you loved this tool, please support the creator.
+            </div>
+            <div style="font-size: 0.9rem; color: var(--color-text-secondary); margin: 20px 0;">Support via UPI:</div>
+            <a href="upi://pay?pa=kartikyuvrajgupta-1@oksbi&pn=Photo%20Mosaic%20Studio&tr=Support&tn=Support%20Creator" 
+               style="text-decoration: none;">
+                <div class="upi-handle">💳 kartikyuvrajgupta-1@oksbi</div>
+            </a>
+            <div style="font-size: 0.8rem; color: var(--color-text-secondary); margin-top: 15px;">
+                📱 Tap to open PayTM, Google Pay, or any payment app
+            </div>
+            <button class="btn-close" onclick="closeModal()">Close</button>
+        </div>
+    </div>
 
-<div id="results-tab" class="tab-content hidden">
-    <h2>Step 3: Download Your Result</h2>
-    <div id="result-container"></div>
-</div>
+    <script>
+        let targetImage = null;
+        let tileImages = [];
+        let mosaicGenerated = false;
+        let isGenerating = false;
+        let tileColorCache = {}; // Cache tile colors
+
+        const detailLevels = { 1: 20, 2: 16, 3: 12, 4: 10, 5: 8, 6: 6 };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('targetInput').addEventListener('change', handleTargetUpload);
+            document.getElementById('tilesInput').addEventListener('change', handleTilesUpload);
+            document.getElementById('detailSlider').addEventListener('change', (e) => {
+                document.getElementById('detailValue').textContent = e.target.value;
+                document.getElementById('tileInfo').textContent = `Tile Size: ~${detailLevels[e.target.value]}px`;
+            });
+            document.getElementById('supportModal').addEventListener('click', (e) => {
+                if (e.target.id === 'supportModal') closeModal();
+            });
+            console.log('✅ Photo Mosaic Studio Ready!');
+        });
+
+        function handleTargetUpload() {
+            const file = document.getElementById('targetInput').files[0];
+            if (!file) return;
+            if (!file.type.startsWith('image/')) {
+                showStatus('❌ Please upload an image file', true);
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    targetImage = img;
+                    document.getElementById('targetImg').src = img.src;
+                    document.getElementById('targetPreviewSection').classList.add('show');
+                    showStatus('✅ Target photo uploaded!');
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function handleTilesUpload() {
+            const files = document.getElementById('tilesInput').files;
+            if (files.length > 50) {
+                showStatus('❌ Maximum 50 photos', true);
+                return;
+            }
+            tileImages = [];
+            tileColorCache = {}; // Clear cache for new tiles
+            let loaded = 0;
+            const validFiles = Array.from(files).filter(f => f.type.startsWith('image/'));
+            if (validFiles.length === 0) {
+                showStatus('❌ No image files selected', true);
+                return;
+            }
+            validFiles.forEach((file, i) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        tileImages.push({ img, id: i });
+                        loaded++;
+                        if (loaded === validFiles.length) {
+                            showTilesPreview();
+                            showStatus(`✅ ${tileImages.length} tiles loaded!`);
+                        }
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function showTilesPreview() {
+            const preview = document.getElementById('tilesPreview');
+            document.getElementById('tileCount').textContent = tileImages.length;
+            preview.innerHTML = '';
+            tileImages.forEach(t => {
+                const div = document.createElement('div');
+                div.className = 'preview-item';
+                div.innerHTML = `<img src="${t.img.src}"><button class="preview-remove" onclick="removeTile(${t.id})">&times;</button>`;
+                preview.appendChild(div);
+            });
+            document.getElementById('tilesPreviewSection').classList.add('show');
+        }
+
+        function removeTarget() {
+            targetImage = null;
+            document.getElementById('targetInput').value = '';
+            document.getElementById('targetPreviewSection').classList.remove('show');
+            document.getElementById('mosaicCanvas').style.display = 'none';
+            document.getElementById('canvasPlaceholder').style.display = 'block';
+        }
+
+        function removeTile(id) {
+            tileImages = tileImages.filter(t => t.id !== id);
+            if (tileImages.length === 0) {
+                document.getElementById('tilesInput').value = '';
+                document.getElementById('tilesPreviewSection').classList.remove('show');
+            } else {
+                showTilesPreview();
+            }
+        }
+
+        function showStatus(msg, isErr = false) {
+            const el = document.getElementById('statusMessage');
+            el.textContent = msg;
+            el.classList.add('show');
+            if (isErr) el.classList.add('error');
+            else el.classList.remove('error');
+            if (!msg.includes('%')) setTimeout(() => el.classList.remove('show'), 4000);
+        }
+
+        function generateMosaic() {
+            if (!targetImage) { showStatus('❌ Upload target photo', true); return; }
+            if (tileImages.length === 0) { showStatus('❌ Upload tile photos', true); return; }
+            if (isGenerating) { showStatus('⏳ Already generating...', true); return; }
+            
+            isGenerating = true;
+            document.getElementById('generateBtn').disabled = true;
+            showStatus('🔄 Starting generation...');
+
+            // Run async generation
+            generateMosaicAsync();
+        }
+
+        async function generateMosaicAsync() {
+            try {
+                const canvas = document.getElementById('mosaicCanvas');
+                const ctx = canvas.getContext('2d');
+                
+                // Allow UI to update
+                await new Promise(r => setTimeout(r, 10));
+                
+                showStatus('🔍 Caching tile colors...');
+                // Pre-cache all tile colors once
+                tileColorCache = {};
+                for (let i = 0; i < tileImages.length; i++) {
+                    const tile = tileImages[i];
+                    const tc = document.createElement('canvas');
+                    tc.width = tc.height = 1;
+                    const tctx = tc.getContext('2d');
+                    tctx.drawImage(tile.img, 0, 0, 1, 1);
+                    const td = tctx.getImageData(0, 0, 1, 1).data;
+                    tileColorCache[i] = { r: td[0], g: td[1], b: td[2] };
+                    
+                    if (i % 10 === 0) {
+                        await new Promise(r => setTimeout(r, 1));
+                    }
+                }
+
+                await new Promise(r => setTimeout(r, 10));
+                
+                canvas.width = targetImage.width;
+                canvas.height = targetImage.height;
+                ctx.drawImage(targetImage, 0, 0);
+
+                const detail = parseInt(document.getElementById('detailSlider').value);
+                const tileSize = detailLevels[detail];
+                
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const data = imageData.data;
+
+                const tilesX = Math.ceil(canvas.width / tileSize);
+                const tilesY = Math.ceil(canvas.height / tileSize);
+                const totalTiles = tilesX * tilesY;
+                
+                let processed = 0;
+                const batchSize = Math.max(10, Math.floor(totalTiles / 30));
+
+                showStatus(`🎨 Processing 0/${totalTiles} tiles...`);
+                await new Promise(r => setTimeout(r, 10));
+
+                for (let ty = 0; ty < tilesY; ty++) {
+                    for (let tx = 0; tx < tilesX; tx++) {
+                        const x = tx * tileSize;
+                        const y = ty * tileSize;
+                        const w = Math.min(tileSize, canvas.width - x);
+                        const h = Math.min(tileSize, canvas.height - y);
+
+                        // Calculate average color
+                        let r = 0, g = 0, b = 0;
+                        for (let py = 0; py < h; py++) {
+                            for (let px = 0; px < w; px++) {
+                                const idx = ((y + py) * canvas.width + (x + px)) * 4;
+                                r += data[idx];
+                                g += data[idx + 1];
+                                b += data[idx + 2];
+                            }
+                        }
+                        const cnt = w * h;
+                        r = Math.round(r / cnt);
+                        g = Math.round(g / cnt);
+                        b = Math.round(b / cnt);
+
+                        // Find best tile using cached colors
+                        let bestTile = 0;
+                        let bestDiff = Infinity;
+
+                        for (let i = 0; i < tileImages.length; i++) {
+                            const cached = tileColorCache[i];
+                            const diff = Math.abs(cached.r - r) + Math.abs(cached.g - g) + Math.abs(cached.b - b);
+                            if (diff < bestDiff) { 
+                                bestDiff = diff; 
+                                bestTile = i; 
+                            }
+                        }
+
+                        // Draw tile
+                        ctx.drawImage(tileImages[bestTile].img, x, y, w, h);
+                        processed++;
+
+                        // Update progress every batch
+                        if (processed % batchSize === 0) {
+                            const percent = Math.round((processed / totalTiles) * 100);
+                            showStatus(`🎨 Processing ${percent}%...`);
+                            // Allow browser to update UI
+                            await new Promise(r => setTimeout(r, 2));
+                        }
+                    }
+                }
+
+                document.getElementById('canvasPlaceholder').style.display = 'none';
+                document.getElementById('mosaicCanvas').style.display = 'block';
+                document.getElementById('downloadBtn').disabled = false;
+                mosaicGenerated = true;
+                isGenerating = false;
+                document.getElementById('generateBtn').disabled = false;
+                showStatus('✨ Mosaic complete! Click Download for 4K.');
+            } catch (err) {
+                console.error('Generation error:', err);
+                showStatus('❌ Error during generation', true);
+                isGenerating = false;
+                document.getElementById('generateBtn').disabled = false;
+            }
+        }
+
+        function downloadMosaic4K() {
+            if (!mosaicGenerated) return;
+            const canvas = document.getElementById('mosaicCanvas');
+            const maxDim = Math.max(canvas.width, canvas.height);
+            const scale = maxDim < 3840 ? 3840 / maxDim : 1;
+            const nc = document.createElement('canvas');
+            nc.width = Math.round(canvas.width * scale);
+            nc.height = Math.round(canvas.height * scale);
+            const ctx = nc.getContext('2d');
+            ctx.imageSmoothingEnabled = false;
+            ctx.drawImage(canvas, 0, 0, nc.width, nc.height);
+            nc.toBlob((blob) => {
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `mosaic-${Date.now()}.png`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+                setTimeout(() => openModal(), 500);
+            }, 'image/png');
+        }
+
+        function openModal() {
+            document.getElementById('supportModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('supportModal').classList.remove('active');
+        }
+    </script>
+</body>
+</html>
