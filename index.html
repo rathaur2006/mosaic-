@@ -265,6 +265,10 @@
 
         .detail-control {
             margin-bottom: 25px;
+            background: rgba(0, 0, 0, 0.15);
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
         .detail-label {
@@ -551,26 +555,6 @@
             background: rgba(236, 72, 153, 0.2);
             border-left-color: #ec4899;
         }
-
-        @keyframes slideDown {
-            from { opacity: 0; transform: translateY(-30px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-        }
-
-        @keyframes scaleIn {
-            from { opacity: 0; transform: scale(0.95); }
-            to { opacity: 1; transform: scale(1); }
-        }
     </style>
 </head>
 <body>
@@ -625,10 +609,18 @@
                     </div>
 
                     <div class="detail-control">
-                        <label class="detail-label">Detail Level: <span id="detailValue">4</span></label>
+                        <label class="detail-label">Tile Detail Level: <span id="detailValue">4</span></label>
                         <input type="range" id="detailSlider" min="1" max="8" value="4">
                         <div style="font-size: 0.8rem; color: var(--color-text-secondary); margin-top: 8px;">
                             <span id="tileInfo">High Detail (Recommended) • Tile: ~8px</span>
+                        </div>
+                    </div>
+
+                    <div class="detail-control">
+                        <label class="detail-label">Color Accuracy (Blend): <span id="blendValue">40%</span></label>
+                        <input type="range" id="blendSlider" min="0" max="80" value="40" step="5">
+                        <div style="font-size: 0.8rem; color: var(--color-text-secondary); margin-top: 8px;">
+                            Blends the original photo over the tiles to fix missing colors and shapes. 
                         </div>
                     </div>
 
@@ -695,7 +687,6 @@
         let isGenerating = false;
         let tileColorCache = {}; 
 
-        // UPDATED: Added levels 7 (2px) and 8 (1px)
         const detailLevels = { 1: 18, 2: 14, 3: 10, 4: 8, 5: 6, 6: 4, 7: 2, 8: 1 }; 
 
         function rgbToLab(r, g, b) {
@@ -797,7 +788,6 @@
             document.getElementById('targetInput').addEventListener('change', handleTargetUpload);
             document.getElementById('tilesInput').addEventListener('change', handleTilesUpload);
             
-            // UPDATED: Added text descriptions for new levels
             document.getElementById('detailSlider').addEventListener('change', (e) => {
                 const val = e.target.value;
                 document.getElementById('detailValue').textContent = val;
@@ -812,6 +802,11 @@
                     8: 'Insane Detail (Slow!)' 
                 };
                 document.getElementById('tileInfo').textContent = `${sizes[val]} • Tile: ~${detailLevels[val]}px`;
+            });
+
+            // NEW: Listen for changes on the blend slider
+            document.getElementById('blendSlider').addEventListener('change', (e) => {
+                document.getElementById('blendValue').textContent = e.target.value + '%';
             });
             
             document.getElementById('supportModal').addEventListener('click', (e) => {
@@ -1039,6 +1034,14 @@
                 showStatus('✨ Enhancing colors...');
                 await new Promise(r => setTimeout(r, 10));
                 enhanceVibrance(canvas, 0.5); 
+
+                // NEW: The "Pro Cheat Code" - Alpha Blending the original image!
+                const blendAmount = parseInt(document.getElementById('blendSlider').value) / 100;
+                if (blendAmount > 0) {
+                    ctx.globalAlpha = blendAmount;
+                    ctx.drawImage(targetImage, 0, 0, canvas.width, canvas.height);
+                    ctx.globalAlpha = 1.0; // Reset it back to normal
+                }
 
                 document.getElementById('canvasPlaceholder').style.display = 'none';
                 document.getElementById('mosaicCanvas').style.display = 'block';
