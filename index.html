@@ -157,7 +157,7 @@
         }
 
         .upload-box {
-            display: block; /* Makes the entire label fill the area */
+            display: block;
             border: 2px dashed var(--glass-border);
             border-radius: 16px;
             padding: 35px 20px;
@@ -552,7 +552,6 @@
             border-left-color: #ec4899;
         }
 
-        /* Feedback Button & Form Styles */
         .btn-floating {
             position: fixed;
             bottom: 30px;
@@ -680,6 +679,14 @@
                         <input type="range" id="detailSlider" min="1" max="8" value="4">
                         <div style="font-size: 0.8rem; color: var(--color-text-secondary); margin-top: 8px;">
                             <span id="tileInfo">High Detail (Recommended) • Tile: ~8px</span>
+                        </div>
+                    </div>
+                    
+                    <div class="detail-control">
+                        <label class="detail-label">Target Blend (Opacity): <span id="opacityValue">30</span>%</label>
+                        <input type="range" id="opacitySlider" min="0" max="100" value="30">
+                        <div style="font-size: 0.8rem; color: var(--color-text-secondary); margin-top: 8px;">
+                            Blends original photo over tiles for better recognition
                         </div>
                     </div>
 
@@ -884,6 +891,11 @@
                     8: 'Insane Detail (Slow!)' 
                 };
                 document.getElementById('tileInfo').textContent = `${sizes[val]} • Tile: ~${detailLevels[val]}px`;
+            });
+
+            // Opacity slider event listener
+            document.getElementById('opacitySlider').addEventListener('input', (e) => {
+                document.getElementById('opacityValue').textContent = e.target.value;
             });
             
             document.getElementById('supportModal').addEventListener('click', (e) => {
@@ -1145,6 +1157,17 @@
                 showStatus('✨ Enhancing colors...');
                 await new Promise(r => setTimeout(r, 10));
                 enhanceVibrance(canvas, 0.5); 
+
+                // --- NEW OPACITY BLEND LOGIC ---
+                const opacityPercent = parseInt(document.getElementById('opacitySlider').value) / 100;
+                if (opacityPercent > 0) {
+                    showStatus('✨ Applying opacity blend...');
+                    ctx.save();
+                    ctx.globalAlpha = opacityPercent;
+                    ctx.drawImage(targetImage, 0, 0, canvas.width, canvas.height);
+                    ctx.restore();
+                }
+                // -------------------------------
 
                 document.getElementById('canvasPlaceholder').style.display = 'none';
                 document.getElementById('mosaicCanvas').style.display = 'block';
