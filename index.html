@@ -5,8 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Photo Mosaic Studio</title>
 
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6569752096572639"
-     crossorigin="anonymous"></script>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6569752096572639" crossorigin="anonymous"></script>
 
     <style>
         * {
@@ -552,6 +551,57 @@
             border-left-color: #ec4899;
         }
 
+        /* Feedback Button & Form Styles */
+        .btn-floating {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, var(--color-purple-light), var(--color-accent));
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: 0 0 20px rgba(124, 58, 237, 0.4);
+            z-index: 999;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-floating:hover {
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 0 30px rgba(124, 58, 237, 0.6);
+        }
+
+        .glass-input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 15px;
+            color: var(--color-white);
+            margin-bottom: 20px;
+            font-family: inherit;
+            font-size: 1rem;
+            transition: var(--transition);
+            resize: vertical;
+        }
+
+        .glass-input:focus {
+            outline: none;
+            border-color: var(--color-purple-light);
+            background: rgba(124, 58, 237, 0.1);
+            box-shadow: 0 0 15px rgba(124, 58, 237, 0.2);
+        }
+
+        .glass-input::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
         @keyframes slideDown {
             from { opacity: 0; transform: translateY(-30px); }
             to { opacity: 1; transform: translateY(0); }
@@ -688,6 +738,29 @@
         </div>
     </div>
 
+    <button class="btn-floating" onclick="openFeedback()" title="Leave Feedback">💬</button>
+
+    <div class="modal-overlay" id="feedbackModal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeFeedback()">&times;</button>
+            <div class="modal-icon">📝</div>
+            <div class="modal-title">Leave Feedback</div>
+            <div class="modal-text">
+                Got a suggestion or found a bug? Let us know! (Everything is optional)
+            </div>
+            
+            <form id="feedbackForm" onsubmit="submitFeedback(event)">
+                <input type="text" id="fbName" class="glass-input" placeholder="Your Name (Optional)">
+                <input type="email" id="fbEmail" class="glass-input" placeholder="Your Gmail (Optional)">
+                <textarea id="fbMessage" class="glass-input" rows="4" placeholder="Your Thoughts (Optional)"></textarea>
+                
+                <button type="submit" class="btn-generate" style="width: 100%; margin-top: 10px;">
+                    Send Feedback
+                </button>
+            </form>
+        </div>
+    </div>
+
     <script>
         let targetImage = null;
         let tileImages = [];
@@ -695,7 +768,6 @@
         let isGenerating = false;
         let tileColorCache = {}; 
 
-        // UPDATED: Added levels 7 (2px) and 8 (1px)
         const detailLevels = { 1: 18, 2: 14, 3: 10, 4: 8, 5: 6, 6: 4, 7: 2, 8: 1 }; 
 
         function rgbToLab(r, g, b) {
@@ -797,8 +869,7 @@
             document.getElementById('targetInput').addEventListener('change', handleTargetUpload);
             document.getElementById('tilesInput').addEventListener('change', handleTilesUpload);
             
-            // UPDATED: Added text descriptions for new levels
-            document.getElementById('detailSlider').addEventListener('change', (e) => {
+            document.getElementById('detailSlider').addEventListener('input', (e) => {
                 const val = e.target.value;
                 document.getElementById('detailValue').textContent = val;
                 const sizes = { 
@@ -843,44 +914,69 @@
 
         function handleTilesUpload() {
             const files = document.getElementById('tilesInput').files;
-            if (files.length > 50) {
-                showStatus('❌ Maximum 50 photos', true);
+            if (tileImages.length + files.length > 50) {
+                showStatus('❌ Maximum 50 photos total', true);
                 return;
             }
-            tileImages = [];
-            tileColorCache = {}; 
+            
             let loaded = 0;
+            let errorCount = 0;
             const validFiles = Array.from(files).filter(f => f.type.startsWith('image/'));
+            
             if (validFiles.length === 0) {
-                showStatus('❌ No image files selected', true);
+                showStatus('❌ No valid image files selected', true);
                 return;
             }
+
+            const idOffset = Date.now(); 
+
             validFiles.forEach((file, i) => {
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     const img = new Image();
                     img.onload = () => {
-                        tileImages.push({ img, id: i });
-                        loaded++;
-                        if (loaded === validFiles.length) {
-                            showTilesPreview();
-                            showStatus(`✅ ${tileImages.length} tiles loaded!`);
-                        }
+                        tileImages.push({ img, id: idOffset + i });
+                        checkFinished();
+                    };
+                    img.onerror = () => {
+                        errorCount++;
+                        checkFinished();
                     };
                     img.src = e.target.result;
                 };
                 reader.readAsDataURL(file);
             });
+
+            function checkFinished() {
+                loaded++;
+                if (loaded === validFiles.length) {
+                    showTilesPreview();
+                    let msg = `✅ ${tileImages.length} tiles loaded!`;
+                    if (errorCount > 0) msg += ` (${errorCount} failed)`;
+                    showStatus(msg);
+                }
+            }
         }
 
         function showTilesPreview() {
             const preview = document.getElementById('tilesPreview');
             document.getElementById('tileCount').textContent = tileImages.length;
-            preview.innerHTML = '';
+            preview.innerHTML = ''; 
+            
             tileImages.forEach(t => {
                 const div = document.createElement('div');
                 div.className = 'preview-item';
-                div.innerHTML = `<img src="${t.img.src}"><button class="preview-remove" onclick="removeTile(${t.id})">&times;</button>`;
+                
+                const imgClone = document.createElement('img');
+                imgClone.src = t.img.src;
+                div.appendChild(imgClone);
+
+                const btn = document.createElement('button');
+                btn.className = 'preview-remove';
+                btn.innerHTML = '&times;';
+                btn.onclick = () => removeTile(t.id);
+                div.appendChild(btn);
+
                 preview.appendChild(div);
             });
             document.getElementById('tilesPreviewSection').classList.add('show');
@@ -910,7 +1006,10 @@
             el.classList.add('show');
             if (isErr) el.classList.add('error');
             else el.classList.remove('error');
-            if (!msg.includes('%')) setTimeout(() => el.classList.remove('show'), 4000);
+            
+            if (!msg.includes('%') && !msg.includes('...')) {
+                setTimeout(() => el.classList.remove('show'), 4000);
+            }
         }
 
         function generateMosaic() {
@@ -971,7 +1070,8 @@
                 const totalTiles = tilesX * tilesY;
                 
                 let processed = 0;
-                const batchSize = Math.max(10, Math.floor(totalTiles / 30));
+
+                const batchSize = Math.max(50, Math.min(2500, Math.floor(totalTiles / 100)));
 
                 showStatus(`🎨 Processing 0/${totalTiles} tiles...`);
                 await new Promise(r => setTimeout(r, 10));
@@ -1086,6 +1186,34 @@
         function closeModal() {
             document.getElementById('supportModal').classList.remove('active');
         }
+
+        // Feedback Modal Logic
+        function openFeedback() {
+            document.getElementById('feedbackModal').classList.add('active');
+        }
+
+        function closeFeedback() {
+            document.getElementById('feedbackModal').classList.remove('active');
+            document.getElementById('feedbackForm').reset();
+        }
+
+        function submitFeedback(event) {
+            event.preventDefault(); 
+            
+            const name = document.getElementById('fbName').value;
+            const email = document.getElementById('fbEmail').value;
+            const message = document.getElementById('fbMessage').value;
+
+            // Later, connect this to Formspree, EmailJS, or your backend.
+            console.log("Feedback Submitted:", { name, email, message });
+
+            closeFeedback();
+            showStatus('✨ Thank you for your feedback!');
+        }
+
+        document.getElementById('feedbackModal').addEventListener('click', (e) => {
+            if (e.target.id === 'feedbackModal') closeFeedback();
+        });
     </script>
 </body>
 </html>
