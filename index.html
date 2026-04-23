@@ -53,7 +53,7 @@
         }
 
         .container {
-            max-width: 1400px;
+            max-width: 1000px; /* Reduced max-width slightly for better readability without sidebar */
             margin: 0 auto;
             padding: 20px;
             position: relative;
@@ -94,36 +94,8 @@
             text-transform: uppercase;
         }
 
-        .ad-container-top {
-            background: var(--glass-bg);
-            backdrop-filter: blur(15px);
-            border: 1px solid var(--glass-border);
-            border-radius: 16px;
-            padding: 40px;
-            text-align: center;
+        .main-content {
             margin-bottom: 40px;
-            box-shadow: var(--shadow-soft);
-            min-height: 120px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--color-text-secondary);
-        }
-
-        .main-grid {
-            display: grid;
-            grid-template-columns: 1fr 280px;
-            gap: 30px;
-            margin-bottom: 40px;
-        }
-
-        @media (max-width: 1024px) {
-            .main-grid {
-                grid-template-columns: 1fr;
-            }
-            .ad-container-sidebar {
-                display: none !important;
-            }
         }
 
         .upload-section {
@@ -134,6 +106,7 @@
             padding: 40px;
             box-shadow: var(--shadow-soft);
             animation: fadeInUp 0.8s ease-out 0.2s both;
+            margin-bottom: 30px;
         }
 
         .upload-title {
@@ -404,22 +377,6 @@
             cursor: not-allowed;
         }
 
-        .ad-container-sidebar {
-            background: var(--glass-bg);
-            backdrop-filter: blur(15px);
-            border: 1px solid var(--glass-border);
-            border-radius: 16px;
-            padding: 30px 20px;
-            text-align: center;
-            box-shadow: var(--shadow-soft);
-            min-height: 600px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--color-text-secondary);
-            animation: fadeInUp 0.8s ease-out 0.3s both;
-        }
-
         footer {
             text-align: center;
             padding: 40px 20px;
@@ -632,88 +589,82 @@
     </header>
 
     <div class="container">
-        <div class="ad-container-top">📌 ADVERTISEMENT (728x90 or responsive banner)</div>
-
-        <div class="main-grid">
-            <div>
-                <div class="upload-section">
-                    <div class="upload-title">📤 Upload Your Photos</div>
-                    
-                    <div class="upload-grid">
-                        <label class="upload-box" tabindex="0">
-                            <div class="upload-label">
-                                <div class="upload-icon">🎯</div>
-                                <div class="upload-text">Main Target Photo</div>
-                                <div class="upload-subtext">JPG, PNG (1 file)</div>
-                            </div>
-                            <input type="file" id="targetInput" accept="image/*" onclick="this.value=null">
-                        </label>
-
-                        <label class="upload-box" tabindex="0">
-                            <div class="upload-label">
-                                <div class="upload-icon">🖼️</div>
-                                <div class="upload-text">Tile Photos</div>
-                                <div class="upload-subtext">Up to 50 photos</div>
-                            </div>
-                            <input type="file" id="tilesInput" accept="image/*" multiple onclick="this.value=null">
-                        </label>
-                    </div>
-
-                    <div class="preview-section" id="targetPreviewSection">
-                        <label class="preview-label">Target Photo:</label>
-                        <div style="width: 100px; height: 100px; position: relative;">
-                            <div class="preview-item">
-                                <img id="targetImg" alt="Target">
-                                <button class="preview-remove" onclick="removeTarget()">&times;</button>
-                            </div>
+        <div class="main-content">
+            <div class="upload-section">
+                <div class="upload-title">📤 Upload Your Photos</div>
+                
+                <div class="upload-grid">
+                    <label class="upload-box" tabindex="0">
+                        <div class="upload-label">
+                            <div class="upload-icon">🎯</div>
+                            <div class="upload-text">Main Target Photo</div>
+                            <div class="upload-subtext">JPG, PNG (1 file)</div>
                         </div>
-                    </div>
+                        <input type="file" id="targetInput" accept="image/*" onclick="this.value=null">
+                    </label>
 
-                    <div class="preview-section" id="tilesPreviewSection">
-                        <label class="preview-label">Tile Photos (<span id="tileCount">0</span>/50):</label>
-                        <div class="preview-grid" id="tilesPreview"></div>
-                    </div>
-
-                    <div class="detail-control">
-                        <label class="detail-label">Detail Level: <span id="detailValue">4</span></label>
-                        <input type="range" id="detailSlider" min="1" max="8" value="4">
-                        <div style="font-size: 0.8rem; color: var(--color-text-secondary); margin-top: 8px;">
-                            <span id="tileInfo">High Detail (Recommended) • Tile: ~8px</span>
+                    <label class="upload-box" tabindex="0">
+                        <div class="upload-label">
+                            <div class="upload-icon">🖼️</div>
+                            <div class="upload-text">Tile Photos</div>
+                            <div class="upload-subtext">Up to 50 photos</div>
                         </div>
-                    </div>
-                    
-                    <div class="detail-control">
-                        <label class="detail-label">Target Blend (Opacity): <span id="opacityValue">30</span>%</label>
-                        <input type="range" id="opacitySlider" min="0" max="100" value="30">
-                        <div style="font-size: 0.8rem; color: var(--color-text-secondary); margin-top: 8px;">
-                            Blends original photo over tiles for better recognition
-                        </div>
-                    </div>
-
-                    <div class="status-message" id="statusMessage"></div>
+                        <input type="file" id="tilesInput" accept="image/*" multiple onclick="this.value=null">
+                    </label>
                 </div>
 
-                <div class="canvas-section">
-                    <div class="canvas-title">🎨 Mosaic Preview</div>
-                    <div class="canvas-wrapper">
-                        <canvas id="mosaicCanvas"></canvas>
-                        <div class="canvas-placeholder" id="canvasPlaceholder">
-                            Upload photos to generate mosaic preview
+                <div class="preview-section" id="targetPreviewSection">
+                    <label class="preview-label">Target Photo:</label>
+                    <div style="width: 100px; height: 100px; position: relative;">
+                        <div class="preview-item">
+                            <img id="targetImg" alt="Target">
+                            <button class="preview-remove" onclick="removeTarget()">&times;</button>
                         </div>
                     </div>
+                </div>
 
-                    <div class="button-group">
-                        <button class="btn-generate" id="generateBtn" onclick="generateMosaic()">
-                            Generate Mosaic
-                        </button>
-                        <button class="btn-download" id="downloadBtn" onclick="downloadMosaic4K()" disabled>
-                            Download 4K Mosaic
-                        </button>
+                <div class="preview-section" id="tilesPreviewSection">
+                    <label class="preview-label">Tile Photos (<span id="tileCount">0</span>/50):</label>
+                    <div class="preview-grid" id="tilesPreview"></div>
+                </div>
+
+                <div class="detail-control">
+                    <label class="detail-label">Detail Level: <span id="detailValue">4</span></label>
+                    <input type="range" id="detailSlider" min="1" max="8" value="4">
+                    <div style="font-size: 0.8rem; color: var(--color-text-secondary); margin-top: 8px;">
+                        <span id="tileInfo">High Detail (Recommended) • Tile: ~8px</span>
                     </div>
                 </div>
+                
+                <div class="detail-control">
+                    <label class="detail-label">Target Blend (Opacity): <span id="opacityValue">30</span>%</label>
+                    <input type="range" id="opacitySlider" min="0" max="100" value="30">
+                    <div style="font-size: 0.8rem; color: var(--color-text-secondary); margin-top: 8px;">
+                        Blends original photo over tiles for better recognition
+                    </div>
+                </div>
+
+                <div class="status-message" id="statusMessage"></div>
             </div>
 
-            <div class="ad-container-sidebar">📢 ADVERTISEMENT<br>(300x600 responsive sidebar)</div>
+            <div class="canvas-section">
+                <div class="canvas-title">🎨 Mosaic Preview</div>
+                <div class="canvas-wrapper">
+                    <canvas id="mosaicCanvas"></canvas>
+                    <div class="canvas-placeholder" id="canvasPlaceholder">
+                        Upload photos to generate mosaic preview
+                    </div>
+                </div>
+
+                <div class="button-group">
+                    <button class="btn-generate" id="generateBtn" onclick="generateMosaic()">
+                        Generate Mosaic
+                    </button>
+                    <button class="btn-download" id="downloadBtn" onclick="downloadMosaic4K()" disabled>
+                        Download 4K Mosaic
+                    </button>
+                </div>
+            </div>
         </div>
 
         <footer>
